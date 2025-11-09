@@ -15,11 +15,13 @@ app.use(express.json());
 
 const DB_URI = process.env.MONGO_URI || 
   `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=admin`;
-  
-mongoose.connect(process.env.MONGO_URI, {
+
+mongoose.connect(DB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-});
+})
+.then(() => console.log("✅ MongoDB connected"))
+.catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Routes
 const authRoutes = require('./routes/auth');
