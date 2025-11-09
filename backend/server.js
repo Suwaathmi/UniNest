@@ -16,14 +16,9 @@ app.use(express.json());
 const DB_URI = process.env.MONGO_URI || 
   `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=admin`;
   
-mongoose.connect(DB_URI, {
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ MongoDB connected'))
-.catch(err => {
-  console.error('❌ MongoDB connection error:', err.message);
-  process.exit(1); // Exit if DB fails
+  useUnifiedTopology: true,
 });
 
 // Routes
