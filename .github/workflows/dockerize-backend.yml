@@ -23,5 +23,5 @@ jobs:
         run: docker build -t suwaathmi/uninest-auth:latest ./backend
 
       - name: Push Docker image
-        run: docker push suwashmi/unimeet-auth:latest
+        run: docker push suwaathmi/uninest-auth:latest
 
