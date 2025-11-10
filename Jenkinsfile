@@ -15,11 +15,11 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo '🧪 Running backend tests...'
-                sh 'cd backend && mvn test'
+                echo '🧪 Running backend tests (Node.js)...'
+                sh 'cd backend && npm install && npm test'
 
-                echo '🧪 Running frontend tests...'
-                sh 'cd frontend && npm install && npm test'
+                echo '🧪 Running frontend tests (React + Vite)...'
+                sh 'cd frontend && npm install && npm run test'
             }
         }
 
