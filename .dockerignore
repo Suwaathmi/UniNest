@@ -1,0 +1,36 @@
+# Node.js / React
+node_modules
+build
+dist
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+logs
+debug.log
+
+# Terraform
+.terraform
+terraform.tfstate
+terraform.tfstate.*
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# Backup files
+*.bak
+*.swp
