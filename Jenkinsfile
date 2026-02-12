@@ -2,45 +2,61 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_COMPOSE_VERSION = '1.29.2'
+        DOCKERHUB = credentials('dockerhub-creds')
     }
 
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                echo '🔧 Building Docker images...'
-                sh 'docker-compose build'
+                git branch: 'main',
+                    url: 'https://github.com/Suwaathmi/UniNest.git',
+                    credentialsId: 'github-token'
             }
         }
 
-        stage('Test') {
+        stage('Build & Push Frontend') {
             steps {
-                echo '🧪 Running backend tests (Node.js)...'
-                sh 'cd backend && npm install && npm test'
-
-                echo '🧪 Running frontend tests (React + Vite)...'
-                sh 'cd frontend && npm install && npm run test'
+                sh '''
+                docker build -t suwaathmi/uninest-frontend:latest ./frontend
+                echo $DOCKERHUB_PSW | docker login -u $DOCKERHUB_USR --password-stdin
+                docker push suwaathmi/uninest-frontend:latest
+                '''
             }
         }
 
-        stage('Deploy') {
+        stage('Build & Push Backend') {
             steps {
-                echo '🚀 Deploying containers...'
-                sh 'docker-compose up -d'
+                sh '''
+                docker build -t suwaathmi/uninest-backend:latest ./backend
+                echo $DOCKERHUB_PSW | docker login -u $DOCKERHUB_USR --password-stdin
+                docker push suwaathmi/uninest-backend:latest
+                '''
             }
         }
-    }
 
-    post {
-        always {
-            echo '📦 Pipeline completed. Cleaning up...'
-            sh 'docker-compose down || true'
+        stage('Build & Push Auth') {
+            steps {
+                sh '''
+                docker build -t suwaathmi/uninest-auth:latest ./auth
+                echo $DOCKERHUB_PSW | docker login -u $DOCKERHUB_USR --password-stdin
+                docker push suwaathmi/uninest-auth:latest
+                '''
+            }
         }
-        success {
-            echo '✅ Deployment successful!'
-        }
-        failure {
-            echo '❌ Deployment failed. Check logs and test results.'
+
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ec2-ssh']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@54.162.88.132 "
+                        docker pull suwaathmi/uninest-frontend:latest &&
+                        docker pull suwaathmi/uninest-backend:latest &&
+                        docker pull suwaathmi/uninest-auth:latest &&
+                        docker compose -f /home/ubuntu/uninest/docker-compose.yml up -d
+                    "
+                    '''
+                }
+            }
         }
     }
 }
