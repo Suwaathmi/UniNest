@@ -1,36 +1,17 @@
-terraform {
-  required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "~> 2.20.0"
-    }
+resource "aws_instance" "uniNestInstance" {
+  ami           = "ami-0c55b159cbfafe01e" // Use the appropriate AMI ID
+  instance_type = "t2.micro"  // Choose the instance type
+  tags = {
+    Name = "UniNest-Application"
   }
-}
 
-provider "docker" {}
-
-resource "docker_image" "uninest_frontend" {
-  name = "suwaathmi/uninest-frontend:latest"
-}
-
-resource "docker_container" "frontend" {
-  name  = "uninest-frontend"
-  image = docker_image.uninest_frontend.name
-  ports {
-    internal = 3000
-    external = 3000
-  }
-}
-
-resource "docker_image" "uninest_backend" {
-  name = "suwaathmi/uninest-auth:latest"
-}
-
-resource "docker_container" "backend" {
-  name  = "uninest-backend"
-  image = docker_image.uninest_backend.name
-  ports {
-    internal = 5000
-    external = 5000
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y docker.io",
+      "sudo systemctl start docker",
+      "sudo systemctl enable docker",
+      "sudo docker run -d -p 80:80 unicast/UniNest" // Replace with your actual Docker image
+    ]
   }
 }
