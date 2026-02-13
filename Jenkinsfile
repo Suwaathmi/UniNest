@@ -1,100 +1,79 @@
 pipeline {
-    agent any 
+    agent any
     environment {
-        DOCKER_BUILDKIT=1
-        DOCKER_IMAGE_NAME = "your-docker-image-name"
-        DOCKER_HUB_REPO = "your-docker-hub-repo"
-        EC2_INSTANCE = "your-ec2-instance"
-        SSH_KEY = credentials('your-ssh-key-id')
+        DOCKER_CREDENTIALS_ID = 'docker-credentials-id' // change this to your Jenkins credential ID
+        DOCKER_IMAGE_FRONTEND = 'your-docker-hub-username/frontend-image-name'
+        DOCKER_IMAGE_BACKEND = 'your-docker-hub-username/backend-image-name'
+        EC2_IP = '54.226.77.47'
+        SSH_CREDENTIALS_ID = 'ssh-credentials-id' // change this to your Jenkins SSH credential ID
     }
     stages {
-        stage('Build Frontend') {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/Suwaathmi/UniNest.git'
+            }
+        }
+        stage('Build Frontend Image') {
             steps {
                 script {
-                    try {
-                        echo 'Building Frontend...'
-                        // Commands to build frontend
-                        sh 'cd frontend && npm install && npm run build'
-                    } catch (Exception e) {
-                        error("Frontend build failed: ${e.message}")
+                    sh 'docker build -t $DOCKER_IMAGE_FRONTEND ./frontend'
+                }
+            }
+        }
+        stage('Build Backend Image') {
+            steps {
+                script {
+                    sh 'docker build -t $DOCKER_IMAGE_BACKEND ./backend'
+                }
+            }
+        }
+        stage('Test Images') {
+            steps {
+                script {
+                    // Add commands to test images
+                    sh 'docker run --rm $DOCKER_IMAGE_FRONTEND test-command'
+                    sh 'docker run --rm $DOCKER_IMAGE_BACKEND test-command'
+                }
+            }
+        }
+        stage('Docker Hub Login') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', "$DOCKER_CREDENTIALS_ID") {
+                        // Login to Docker Hub
                     }
                 }
             }
         }
-        stage('Build Backend') {
+        stage('Push Images') {
             steps {
                 script {
-                    try {
-                        echo 'Building Backend...'
-                        // Commands to build backend
-                        sh 'cd backend && mvn clean package'
-                    } catch (Exception e) {
-                        error("Backend build failed: ${e.message}")
+                    sh 'docker push $DOCKER_IMAGE_FRONTEND'
+                    sh 'docker push $DOCKER_IMAGE_BACKEND'
+                }
+            }
+        }
+        stage('EC2 Deployment') {
+            steps {
+                script {
+                    sshagent(['$SSH_CREDENTIALS_ID']) {
+                        sh """
+                        ssh ec2-user@$EC2_IP 'cd /path/to/your/app && docker-compose up -d'
+                        """
                     }
                 }
             }
         }
-        stage('Test') {
+        stage('Deployment Verification') {
             steps {
                 script {
-                    try {
-                        echo 'Running Tests...'
-                        // Commands to run tests
-                        sh './run-tests.sh'
-                    } catch (Exception e) {
-                        error("Tests failed: ${e.message}")
+                    sshagent(['$SSH_CREDENTIALS_ID']) {
+                        sh """
+                        ssh ec2-user@$EC2_IP 'curl -f http://localhost:your-port || exit 1'
+                        """
                     }
                 }
             }
-        }
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    try {
-                        echo 'Building Docker Image...'
-                        sh "docker build -t ${DOCKER_IMAGE_NAME} ."
-                    } catch (Exception e) {
-                        error("Docker build failed: ${e.message}")
-                    }
-                }
-            }
-        }
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    try {
-                        echo 'Pushing Docker Image to Docker Hub...'
-                        sh "docker login -u your-docker-username -p your-docker-password"
-                        sh "docker push ${DOCKER_HUB_REPO}/${DOCKER_IMAGE_NAME}"
-                    } catch (Exception e) {
-                        error("Pushing to Docker Hub failed: ${e.message}")
-                    }
-                }
-            }
-        }
-        stage('Deploy to EC2') {
-            steps {
-                script {
-                    try {
-                        echo 'Deploying to EC2...'
-                        sh "ssh -i ${SSH_KEY} ec2-user@${EC2_INSTANCE} 'cd /path/to/your/app && docker-compose down && docker-compose up -d'"
-                    } catch (Exception e) {
-                        error("Deployment failed: ${e.message}")
-                    }
-                }
-            }
-        }
-    }
-    post {
-        always {
-            echo 'Cleaning up...'
-            // Any cleanup steps
-        }
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check logs for details.'
         }
     }
 }
