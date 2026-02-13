@@ -46,6 +46,45 @@ This Jenkinsfile requires the following credentials to be configured in Jenkins:
   6. Secret: Your EC2 public IP (e.g., `52.12.34.56`) or hostname
   7. Description: EC2 Host Address
 
+### 4. JWT Secret
+- **Credential ID**: `jwt-secret`
+- **Type**: Secret text
+- **Description**: JWT secret key for authentication
+- **Setup**:
+  1. Go to Jenkins → Manage Jenkins → Manage Credentials
+  2. Select the appropriate domain (usually "Global")
+  3. Click "Add Credentials"
+  4. Kind: Secret text
+  5. ID: `jwt-secret`
+  6. Secret: A strong random secret key (e.g., generate with `openssl rand -base64 32`)
+  7. Description: JWT Secret Key
+
+### 5. Database Username
+- **Credential ID**: `db-username`
+- **Type**: Secret text
+- **Description**: MongoDB root username
+- **Setup**:
+  1. Go to Jenkins → Manage Jenkins → Manage Credentials
+  2. Select the appropriate domain (usually "Global")
+  3. Click "Add Credentials"
+  4. Kind: Secret text
+  5. ID: `db-username`
+  6. Secret: Your MongoDB username (e.g., `admin` or `dbadmin`)
+  7. Description: Database Username
+
+### 6. Database Password
+- **Credential ID**: `db-password`
+- **Type**: Secret text
+- **Description**: MongoDB root password
+- **Setup**:
+  1. Go to Jenkins → Manage Jenkins → Manage Credentials
+  2. Select the appropriate domain (usually "Global")
+  3. Click "Add Credentials"
+  4. Kind: Secret text
+  5. ID: `db-password`
+  6. Secret: A strong password for MongoDB
+  7. Description: Database Password
+
 ## Environment Variables
 
 The following environment variables are used in the pipeline:
@@ -56,6 +95,9 @@ The following environment variables are used in the pipeline:
 - `IMAGE_TAG`: Build number used as Docker image tag
 - `EC2_USER`: SSH user for EC2 (default: `ubuntu`)
 - `NODE_ENV`: Application environment (set to `production`)
+- `JWT_SECRET`: JWT secret key from Jenkins credentials
+- `DB_USER`: Database username from Jenkins credentials
+- `DB_PASS`: Database password from Jenkins credentials
 
 ## Pipeline Stages
 
@@ -159,11 +201,16 @@ The pipeline provides status notifications in the post-build section:
 
 ## Security Notes
 
-1. **Never commit credentials**: Use Jenkins credentials manager
-2. **Rotate keys regularly**: Update SSH keys and Docker Hub tokens periodically
-3. **Use secrets for sensitive data**: Store JWT_SECRET and database passwords securely
-4. **Enable Docker Content Trust**: For signed image verification
-5. **Limit SSH access**: Use security groups to restrict SSH access to Jenkins IP only
+1. **Never commit credentials**: All sensitive data is stored in Jenkins credentials manager
+2. **Rotate keys regularly**: Update SSH keys, Docker Hub tokens, and secrets periodically
+3. **Strong secrets**: Generate strong random secrets:
+   - JWT Secret: `openssl rand -base64 32`
+   - Database Password: `openssl rand -base64 24`
+4. **SSH host verification**: The pipeline now uses `ssh-keyscan` to add the EC2 host key to known_hosts, preventing MITM attacks
+5. **No hardcoded defaults**: All secrets must be explicitly configured in Jenkins
+6. **Enable Docker Content Trust**: For signed image verification
+7. **Limit SSH access**: Use security groups to restrict SSH access to Jenkins IP only
+8. **Environment variable security**: Secrets are passed securely via environment variables, not hardcoded in files
 
 ## Maintenance
 
