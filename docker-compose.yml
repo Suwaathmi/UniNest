@@ -3,24 +3,34 @@ version: '3.8'
 services:
   frontend:
     image: suwaathmi/uninest-frontend:latest
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+    container_name: uninest-frontend
+    expose:
+      - "3000"
 
   backend:
     image: suwaathmi/uninest-backend:latest
-    ports:
-      - "5000:5000"
+    container_name: uninest-backend
+    expose:
+      - "5000"
     environment:
       - MONGO_URI=mongodb://mongo:27017/uninest
 
   mongo:
     image: mongo:6.0
-    ports:
-      - "27017:27017"
+    container_name: uninest-mongo
     volumes:
       - mongo_data:/data/db
+
+  nginx:
+    image: nginx:alpine
+    container_name: uninest-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
 
 volumes:
   mongo_data:
