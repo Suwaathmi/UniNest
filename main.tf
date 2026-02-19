@@ -52,17 +52,11 @@ resource "aws_security_group" "uninest_sg" {
   }
 }
 
-# Use your existing SSH key
-resource "aws_key_pair" "uninest_key" {
-  key_name   = "uninest-key"
-  public_key = file("~/.ssh/id_rsa.pub")
-}
-
 # App Server
 resource "aws_instance" "app_server" {
   ami                    = "ami-0030e4319cbf4dbf2"  # Ubuntu 22.04
   instance_type          = "t3.micro"
-  key_name               = aws_key_pair.uninest_key.key_name
+  key_name               = "uninest-key"            # use existing AWS key pair
   vpc_security_group_ids = [aws_security_group.uninest_sg.id]
   subnet_id              = data.aws_subnet.default.id
 
@@ -83,7 +77,7 @@ resource "aws_instance" "app_server" {
 resource "aws_instance" "jenkins_server" {
   ami                    = "ami-0030e4319cbf4dbf2"  # Ubuntu 22.04
   instance_type          = "t3.micro"
-  key_name               = aws_key_pair.uninest_key.key_name
+  key_name               = "uninest-key"            # use existing AWS key pair
   vpc_security_group_ids = [aws_security_group.uninest_sg.id]
   subnet_id              = data.aws_subnet.default.id
 
