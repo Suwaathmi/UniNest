@@ -1,23 +1,41 @@
-# AWS Configuration Variables
-
-variable "ec2_key_name" {
-  description = "Name of the EC2 key pair"
+variable "aws_region" {
+  description = "AWS region to deploy resources"
   type        = string
+  default     = "us-east-1"
 }
 
-variable "instance_type" {
-  description = "Type of the EC2 instance"
+variable "ssh_public_key_path" {
+  description = "Path to the SSH public key file"
   type        = string
-  default     = "t2.micro"
+  default     = "~/.ssh/id_rsa.pub"
 }
 
-variable "environment" {
-  description = "Environment for the deployment (e.g., dev, staging, production)"
+variable "jenkins_instance_type" {
+  description = "EC2 instance type for the Jenkins server"
   type        = string
+  default     = "t3.medium"
 }
 
-variable "cidr_blocks" {
-  description = "CIDR blocks for the VPC"
-  type        = list(string)
-  default     = ["10.0.0.0/16"]
+variable "app_instance_type" {
+  description = "EC2 instance type for the application server"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "ami_id" {
+  description = "AMI ID to use for EC2 instances (Ubuntu 22.04)"
+  type        = string
+  default     = "ami-0030e4319cbf4dbf2"
+}
+
+variable "docker_image_frontend" {
+  description = "Docker image for the UniNest frontend"
+  type        = string
+  default     = "suwaathmi/uninest-frontend:latest"
+}
+
+variable "docker_image_backend" {
+  description = "Docker image for the UniNest backend"
+  type        = string
+  default     = "suwaathmi/uninest-backend:latest"
 }
