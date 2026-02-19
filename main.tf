@@ -1,3 +1,63 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+# Get default VPC and subnet
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnet" "default" {
+  vpc_id            = data.aws_vpc.default.id
+  availability_zone = "us-east-1a"
+}
+
+# Security group for SSH, HTTP, Jenkins
+resource "aws_security_group" "uninest_sg" {
+  name_prefix = "uninest-"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Use your existing SSH key
+resource "aws_key_pair" "uninest_key" {
+  key_name   = "uninest-key"
+  public_key = file("~/.ssh/id_rsa.pub")
+}
+
 # App Server
 resource "aws_instance" "app_server" {
   ami                    = "ami-0030e4319cbf4dbf2"  # Ubuntu 22.04
@@ -38,13 +98,4 @@ resource "aws_instance" "jenkins_server" {
               sudo systemctl enable jenkins docker
               sudo systemctl start jenkins docker
               EOF
-}
-
-# Outputs
-output "app_server_ip" {
-  value = aws_instance.app_server.public_ip
-}
-
-output "jenkins_server_ip" {
-  value = aws_instance.jenkins_server.public_ip
 }
