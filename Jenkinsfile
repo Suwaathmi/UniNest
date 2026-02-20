@@ -41,7 +41,7 @@ pipeline {
                     ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP '
                       docker pull $DOCKER_IMAGE_FRONTEND &&
                       docker pull $DOCKER_IMAGE_BACKEND &&
-                      docker-compose -f /home/ubuntu/uninest/docker-compose.yml up -d
+                      docker compose -f /home/ubuntu/uninest/docker-compose.yml up -d
                     '
                     """
                 }
