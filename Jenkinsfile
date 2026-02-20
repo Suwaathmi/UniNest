@@ -4,7 +4,7 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
         DOCKER_IMAGE_FRONTEND = 'suwaathmi/uninest-frontend:latest'
         DOCKER_IMAGE_BACKEND  = 'suwaathmi/uninest-backend:latest'
-        EC2_IP = 'YOUR_ELASTIC_IP'   // Replace with Elastic IP, not dynamic
+        EC2_IP = '13.216.81.242'   // Replace with your Elastic IP if allocated
         SSH_CREDENTIALS_ID = 'ssh-credentials-id'
     }
     stages {
