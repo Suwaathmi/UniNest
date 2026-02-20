@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy only package.json first to leverage caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --legacy-peer-deps
+# Install dependencies with peer compatibility + fix ajv mismatch
+RUN npm install --legacy-peer-deps && npm install ajv@^8.12.0 ajv-keywords@^5.1.0
 
 # Copy the rest of the source code
 COPY . .
